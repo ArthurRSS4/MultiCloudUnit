@@ -1,0 +1,15 @@
+# Arquivos do Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+
+# Arquivos de log
+*.log
+
+# Credenciais e variáveis sensíveis
+*.pem
+*.p12
+*.key
+.env
+secrets.auto.tfvars
