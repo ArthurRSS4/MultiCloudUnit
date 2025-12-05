@@ -1,0 +1,58 @@
+trigger:
+- master  
+
+variables:
+  awsServiceConnection: 'AWS-TechFusion-Dev'      
+  azureServiceConnection: 'Azure-Dev-Subscription'  
+  
+  terraformRootPath: 'environments/dev/global'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+- stage: Validate
+  displayName: 'Validação do Código Terraform'
+  jobs:
+  - job: Validate_Terraform
+    displayName: 'Validar e Formatar'
+    steps:
+    
+    - task: TerraformInstaller@1
+      inputs:
+        terraformVersion: '1.5.0'
+
+    
+    - script: |
+        cd $(terraformRootPath)
+        terraform init -backend=false
+        terraform validate
+        terraform fmt -check
+      displayName: 'Init, Validate e Format Check'
+      
+
+- stage: Plan
+  displayName: 'Plano de Implantação'
+  dependsOn: Validate
+  jobs:
+  - job: Plan_Infrastructure
+    displayName: 'Gerar Plano Terraform'
+    steps:
+    - task: TerraformInstaller@1
+      inputs:
+        terraformVersion: '1.5.0'
+
+    
+    - script: |
+        cd $(terraformRootPath)
+        terraform init
+        terraform plan -out=tfplan -detailed-exitcode
+      displayName: 'Terraform Init e Plan'
+      
+      continueOnError: true
+
+    
+    - task: PublishBuildArtifacts@1
+      inputs:
+        path: '$(terraformRootPath)/tfplan'
+        artifactName: 'terraformPlan'
